@@ -1,0 +1,113 @@
+{
+  "version": "1.0",
+  "properties": [
+    {
+      "id": "humidity",
+      "name": "湿度",
+      "desc": "",
+      "mode": "r",
+      "define": {
+        "type": "float",
+        "min": "0",
+        "max": "100",
+        "start": "0",
+        "step": "0.1",
+        "unit": ""
+      },
+      "required": false
+    },
+    {
+      "id": "temperature",
+      "name": "温度",
+      "desc": "",
+      "mode": "r",
+      "define": {
+        "type": "float",
+        "min": "-40",
+        "max": "155",
+        "start": "25",
+        "step": "0.1",
+        "unit": ""
+      },
+      "required": false
+    },
+    {
+      "id": "door",
+      "name": "门",
+      "desc": "",
+      "mode": "r",
+      "define": {
+        "type": "bool",
+        "mapping": {
+          "0": "关",
+          "1": "开"
+        }
+      },
+      "required": false
+    },
+    {
+      "id": "illumination",
+      "name": "光照",
+      "desc": "",
+      "mode": "r",
+      "define": {
+        "type": "float",
+        "min": "0",
+        "max": "10000",
+        "start": "0",
+        "step": "0.1",
+        "unit": ""
+      },
+      "required": false
+    },
+    {
+      "id": "light",
+      "name": "灯",
+      "desc": "",
+      "mode": "rw",
+      "define": {
+        "type": "bool",
+        "mapping": {
+          "0": "关",
+          "1": "开"
+        }
+      },
+      "required": false
+    },
+    {
+      "id": "ac",
+      "name": "空调",
+      "desc": "",
+      "mode": "rw",
+      "define": {
+        "type": "bool",
+        "mapping": {
+          "0": "关",
+          "1": "开"
+        }
+      },
+      "required": false
+    },
+    {
+      "id": "curtain",
+      "name": "窗帘",
+      "desc": "",
+      "mode": "rw",
+      "define": {
+        "type": "float",
+        "min": "0",
+        "max": "100",
+        "start": "0",
+        "step": "0.1",
+        "unit": ""
+      },
+      "required": false
+    }
+  ],
+  "events": [],
+  "actions": [],
+  "profile": {
+    "ProductId": "7UP84IKE95",
+    "CategoryId": "1"
+  }
+}
