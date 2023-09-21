@@ -1,0 +1,29 @@
+D:\课程\计算机系统综合实践\物联网网关模拟器\物联网网关模拟器\bin\Debug\物联网网关模拟器.exe.config
+D:\课程\计算机系统综合实践\物联网网关模拟器\物联网网关模拟器\bin\Debug\物联网网关模拟器.exe
+D:\课程\计算机系统综合实践\物联网网关模拟器\物联网网关模拟器\bin\Debug\物联网网关模拟器.pdb
+D:\课程\计算机系统综合实践\物联网网关模拟器\物联网网关模拟器\obj\Debug\物联网网关模拟器.csprojAssemblyReference.cache
+D:\课程\计算机系统综合实践\物联网网关模拟器\物联网网关模拟器\obj\Debug\物联网网关模拟器.Form1.resources
+D:\课程\计算机系统综合实践\物联网网关模拟器\物联网网关模拟器\obj\Debug\物联网网关模拟器.Properties.Resources.resources
+D:\课程\计算机系统综合实践\物联网网关模拟器\物联网网关模拟器\obj\Debug\物联网网关模拟器.csproj.GenerateResource.cache
+D:\课程\计算机系统综合实践\物联网网关模拟器\物联网网关模拟器\obj\Debug\物联网网关模拟器.exe
+D:\课程\计算机系统综合实践\物联网网关模拟器\物联网网关模拟器\obj\Debug\物联网网关模拟器.pdb
+D:\课程\计算机系统综合实践\物联网网关模拟器-手动发动\物联网网关模拟器\bin\Debug\物联网网关模拟器.exe.config
+D:\课程\计算机系统综合实践\物联网网关模拟器-手动发动\物联网网关模拟器\bin\Debug\物联网网关模拟器.exe
+D:\课程\计算机系统综合实践\物联网网关模拟器-手动发动\物联网网关模拟器\bin\Debug\物联网网关模拟器.pdb
+D:\课程\计算机系统综合实践\物联网网关模拟器-手动发动\物联网网关模拟器\obj\Debug\物联网网关模拟器.csprojAssemblyReference.cache
+D:\课程\计算机系统综合实践\物联网网关模拟器-手动发动\物联网网关模拟器\obj\Debug\物联网网关模拟器.Form1.resources
+D:\课程\计算机系统综合实践\物联网网关模拟器-手动发动\物联网网关模拟器\obj\Debug\物联网网关模拟器.Properties.Resources.resources
+D:\课程\计算机系统综合实践\物联网网关模拟器-手动发动\物联网网关模拟器\obj\Debug\物联网网关模拟器.csproj.GenerateResource.cache
+D:\课程\计算机系统综合实践\物联网网关模拟器-手动发动\物联网网关模拟器\obj\Debug\物联网网关模拟器.exe
+D:\课程\计算机系统综合实践\物联网网关模拟器-手动发动\物联网网关模拟器\obj\Debug\物联网网关模拟器.pdb
+C:\Users\沈佳昊\Desktop\sjh\Second half of sophomore year\计算机系统综合实践\资源下载\（改）物联网网关模拟器-手动发动\（改）物联网网关模拟器-手动发动\物联网网关模拟器\obj\Debug\物联网网关模拟器.csproj.AssemblyReference.cache
+C:\Users\沈佳昊\Desktop\sjh\Second half of sophomore year\计算机系统综合实践\资源下载\（改）物联网网关模拟器-手动发动\（改）物联网网关模拟器-手动发动\物联网网关模拟器\obj\Debug\物联网网关模拟器.csproj.SuggestedBindingRedirects.cache
+C:\Users\沈佳昊\Desktop\sjh\Second half of sophomore year\计算机系统综合实践\资源下载\（改）物联网网关模拟器-手动发动\（改）物联网网关模拟器-手动发动\物联网网关模拟器\obj\Debug\物联网网关模拟器.Form1.resources
+C:\Users\沈佳昊\Desktop\sjh\Second half of sophomore year\计算机系统综合实践\资源下载\（改）物联网网关模拟器-手动发动\（改）物联网网关模拟器-手动发动\物联网网关模拟器\obj\Debug\物联网网关模拟器.Properties.Resources.resources
+C:\Users\沈佳昊\Desktop\sjh\Second half of sophomore year\计算机系统综合实践\资源下载\（改）物联网网关模拟器-手动发动\（改）物联网网关模拟器-手动发动\物联网网关模拟器\obj\Debug\物联网网关模拟器.csproj.GenerateResource.cache
+C:\Users\沈佳昊\Desktop\sjh\Second half of sophomore year\计算机系统综合实践\资源下载\（改）物联网网关模拟器-手动发动\（改）物联网网关模拟器-手动发动\物联网网关模拟器\obj\Debug\物联网网关模拟器.csproj.CoreCompileInputs.cache
+C:\Users\沈佳昊\Desktop\sjh\Second half of sophomore year\计算机系统综合实践\资源下载\（改）物联网网关模拟器-手动发动\（改）物联网网关模拟器-手动发动\物联网网关模拟器\obj\Debug\物联网网关模拟器.exe
+C:\Users\沈佳昊\Desktop\sjh\Second half of sophomore year\计算机系统综合实践\资源下载\（改）物联网网关模拟器-手动发动\（改）物联网网关模拟器-手动发动\物联网网关模拟器\obj\Debug\物联网网关模拟器.pdb
+C:\Users\沈佳昊\Desktop\sjh\Second half of sophomore year\计算机系统综合实践\资源下载\（改）物联网网关模拟器-手动发动\（改）物联网网关模拟器-手动发动\物联网网关模拟器\bin\Debug\物联网网关模拟器.exe.config
+C:\Users\沈佳昊\Desktop\sjh\Second half of sophomore year\计算机系统综合实践\资源下载\（改）物联网网关模拟器-手动发动\（改）物联网网关模拟器-手动发动\物联网网关模拟器\bin\Debug\物联网网关模拟器.exe
+C:\Users\沈佳昊\Desktop\sjh\Second half of sophomore year\计算机系统综合实践\资源下载\（改）物联网网关模拟器-手动发动\（改）物联网网关模拟器-手动发动\物联网网关模拟器\bin\Debug\物联网网关模拟器.pdb

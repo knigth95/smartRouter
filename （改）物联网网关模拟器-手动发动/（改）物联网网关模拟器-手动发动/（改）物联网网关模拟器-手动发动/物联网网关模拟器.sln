@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33723.286
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "物联网网关模拟器", "物联网网关模拟器\物联网网关模拟器.csproj", "{42899E47-A89F-4669-B19F-84C6F16D0C63}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "物联网网关模拟", "物联网网关模拟\物联网网关模拟.vdproj", "{ED667587-411C-4EB3-9712-E796458287BF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{42899E47-A89F-4669-B19F-84C6F16D0C63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42899E47-A89F-4669-B19F-84C6F16D0C63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42899E47-A89F-4669-B19F-84C6F16D0C63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42899E47-A89F-4669-B19F-84C6F16D0C63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED667587-411C-4EB3-9712-E796458287BF}.Debug|Any CPU.ActiveCfg = Debug
+		{ED667587-411C-4EB3-9712-E796458287BF}.Release|Any CPU.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D55C114A-7503-4DCB-AD0F-E7D69CA32B22}
+	EndGlobalSection
+EndGlobal
