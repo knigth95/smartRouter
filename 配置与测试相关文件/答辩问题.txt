@@ -1,0 +1,5 @@
+1.如果要修改测试页面串口发送信息的行数，是哪个语句？
+答：位于mytest.lua中view_output.reempty=2
+
+2.定义串口号数的文件语句是哪个？
+答：定义了7号串口，文件是第二份mytest.c文件中的#define COMPORT_NUMBER “/dev/ttyS1”

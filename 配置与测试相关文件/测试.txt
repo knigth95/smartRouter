@@ -1,0 +1,708 @@
+ 
+//对云端下发控制命令进行处理
+void HandleControlMsgFromCloud(int fd, void *pClient)
+{
+	int i,len, j,rc;
+	unsigned char buf[10] = {'X', 'Y'}, recvd = 0;
+	sReplyPara replyPara;
+
+	for(i = 0; i < TOTAL_PROPERTY_COUNT; i++)
+	{
+		if(dataTemplates[i].state == cCHANGED)
+		{
+			recvd = 1;
+			dataTemplates[i].state = eNOCHANGE;
+			buf[3] = i;
+			switch(i)
+			{
+				case 0:
+				case 1:
+				case 2:
+				case 6:
+					len = 4;
+					break;
+				case 3:
+				case 4:
+				case 5:
+					len = 1;
+					break;
+			}
+			memcpy(buf+4, dataTemplates[i].data_property.data, len);
+			buf[2] = len + 1;
+			buf[buf[2]+3] = 0;
+			for(j = 2; j < buf[2]+3; j++)
+				buf[buf[2]+3] += buf[j];
+			write(fd, buf, buf[2]+4);
+			printf("Done.");
+		}
+	}
+	if(recvd)
+	{
+		printf("Replying control msg.");
+		memset((char *)&replyPara, 0, sizeof(sReplyPara));
+		replyPara.code = eDEAL_SUCCESS;
+		replyPara.timeout_ms = QCLOUD_IOT_MQTT_COMMAND_TIMEOUT;
+		replyPara.status_msg[0] = '\0';
+		rc = IOT_Template_ControlReply(pClient, dataReportBuffer, dataReportBufferSize, &replyPara);
+		if(rc==QCLOUD_RET_SUCCESS)
+			Log_d("Control msg reply success.");
+		else
+			Log_e("Control msg reply failed, err: %d.", rc);
+	}
+}
+//向云端上报数据
+void ReportDataToCloud(void *pClient)
+{
+	int i, j = 0, rc;
+	DeviceProperty *pReportDataList[TOTAL_PROPERTY_COUNT];
+	//查找要上报的数据
+	for(i = 0; i < TOTAL_PROPERTY_COUNT; i++)
+	{
+		if(dataTemplates[i].state == eCHANGED)
+		{
+			pReportDataList[j++] = &(dataTemplates[i].data_property);
+			dataTemplates[i].state = eNOCHANGE;
+		}
+	}
+	//没有数据上报，返回
+	if(j == 0)
+		return;
+
+	rc = IOT_Template_JSON_ConstructReportArray(pClient, dataReportBuffer, dataReportBufferSize, j, pReportDataList);
+	if(rc == QCLOUD_RET_SUCCESS)
+	{
+		rc = IOT_Template_Report(pClient, dataReportBuffer, dataReportBufferSize, OnReportReplyCallback, NULL, QCLOUD_IOT_MQTT_COMMAND_TIMEOUT);
+		if(rc == QCLOUD_RET_SUCCESS)
+			Log_i("Data template report success");
+		else
+			Log_e("Data template report failed, err: %d", rc);
+	}else{
+		Log_e("Data template construct failed, err: %d", rc);
+	}
+}
+
+void OnReportReplyCallback(void *pClient, Method method, ReplyAck replyAck, const char *pJsonDocument, void *pUserdata)
+{
+	Log_i("Receive report reply(ack=%d): %s", replyAck, pJsonDocument);
+}
+//接收串口数据
+void HandleDataFromComport(int fd)
+{
+	#define MAX_DATA_LENGTH 5
+	unsigned int cnt, i;
+	unsigned char buf[4096];
+	static unsigned char recvData[MAX_DATA_LENGTH], *pData, checkSum, recvFlag = 0, recvLength;
+
+	cnt = read(fd, buf, 4096);
+
+	if (cnt == 0)
+		return;
+
+	for (i = 0; i < cnt; i++)
+	{
+		switch(recvFlag)
+		{
+			case 0:
+				if(buf[i]=='X')
+					recvFlag = 1;
+				break;
+			case 1:
+				if(buf[i]=='Y')
+					recvFlag = 2;
+				else
+					recvFlag = 0;
+				break;
+			case 2:
+				recvLength = buf[i];
+				if((recvLength > MAX_DATA_LENGTH) || (recvLength == 0))
+					recvFlag = 0;
+				else
+				{
+					recvFlag = 3;
+					pData = recvData;
+					checkSum = recvLength;
+				}
+				break;
+			case 3:
+				*pData++ = buf[i];
+				checkSum += buf[i];
+				if(--recvLength == 0)
+					recvFlag = 4;
+				break;
+			case 4:
+				if(checkSum == buf[i])
+				{
+					if(recvData[0] < TOTAL_PROPERTY_COUNT)
+					{
+						dataTemplates[recvData[0]].state = eCHANGED;
+						if(dataTemplates[recvData[0]].data_property.type == TYPE_TEMPLATE_FLOAT)
+						{
+							*((float *)(dataTemplates[recvData[0]].data_property.data)) = *((float *)(recvData+1));
+						}
+						else if (dataTemplates[recvData[0]].data_property.type == TYPE_TEMPLATE_BOOL)
+						{
+							*((unsigned char *)(dataTemplates[recvData[0]].data_property.data)) = (recvData[1] > 0) ? 1 : 0;
+						}
+					}
+				}
+				recvFlag = 0;
+				break;
+			}
+		}
+}
+
+//在这里添加代码
+if(recvData[0] == 0)
+//如果接收到的数据是温度
+{ float temperature = *((float *)(recvData+1));
+//将recvData[1]及后续字节转换为浮点数
+if(temperature > 30)
+//如果温度大于30度
+{ dataTemplates[5].state = eCHANGED;
+//将空调的状态设置为eCHANGED
+*((unsigned char *)(dataTemplates[5].data_property.data)) = 1;
+//将空调的值设置为1，表示打开
+}
+}
+// add this code after "if(dataTemplates[recvData[0]].data_property.type == TYPE_TEMPLATE_BOOL)"
+if (strcmp(dataTemplates[recvData[0]].data_property.key, "temperature") == 0)
+{
+    float temperature = *((float *)(recvData+1));
+    if (temperature > 30 && !*((unsigned char *)(dataTemplates[5].data_property.data)))
+    {
+        *((unsigned char *)(dataTemplates[5].data_property.data)) = 1; // turn on AC
+        dataTemplates[5].state = eCHANGED; // set state of AC data template to eCHANGED
+    }
+}
+
+//////////////////////////////////////////////////
+
+//对云端下发控制命令进行处理
+void HandleControlMsgFromCloud(int fd, void *pClient)
+{
+	int i,len, j,rc;
+	unsigned char buf[10] = {'X', 'Y'}, recvd = 0;
+	sReplyPara replyPara;
+
+	for(i = 0; i < TOTAL_PROPERTY_COUNT; i++)
+	{
+		if(dataTemplates[i].state == cCHANGED)
+		{
+			recvd = 1;
+			dataTemplates[i].state = eNOCHANGE;
+			buf[3] = i;
+			switch(i)
+			{
+				case 0:
+				case 1:
+				case 2:
+				case 6:
+					len = 4;
+					break;
+				case 3:
+				case 4:
+				case 5:
+					len = 1;
+					break;
+			}
+			memcpy(buf+4, dataTemplates[i].data_property.data, len);
+			buf[2] = len + 1;
+			buf[buf[2]+3] = 0;
+			for(j = 2; j < buf[2]+3; j++)
+				buf[buf[2]+3] += buf[j];
+			write(fd, buf, buf[2]+4);
+			printf("Done.");
+		}
+	}
+	if(recvd)
+	{
+		printf("Replying control msg.");
+		memset((char *)&replyPara, 0, sizeof(sReplyPara));
+		replyPara.code = eDEAL_SUCCESS;
+		replyPara.timeout_ms = QCLOUD_IOT_MQTT_COMMAND_TIMEOUT;
+		replyPara.status_msg[0] = '\0';
+		rc = IOT_Template_ControlReply(pClient, dataReportBuffer, dataReportBufferSize, &replyPara);
+		if(rc==QCLOUD_RET_SUCCESS)
+			Log_d("Control msg reply success.");
+		else
+			Log_e("Control msg reply failed, err: %d.", rc);
+	}
+}
+//向云端上报数据
+void ReportDataToCloud(void *pClient)
+{
+	int i, j = 0, rc;
+	DeviceProperty *pReportDataList[TOTAL_PROPERTY_COUNT];
+	//查找要上报的数据
+	for(i = 0; i < TOTAL_PROPERTY_COUNT; i++)
+	{
+		if(dataTemplates[i].state == eCHANGED)
+		{
+			pReportDataList[j++] = &(dataTemplates[i].data_property);
+			dataTemplates[i].state = eNOCHANGE;
+		}
+	}
+	//没有数据上报，返回
+	if(j == 0)
+		return;
+
+	rc = IOT_Template_JSON_ConstructReportArray(pClient, dataReportBuffer, dataReportBufferSize, j, pReportDataList);
+	if(rc == QCLOUD_RET_SUCCESS)
+	{
+		rc = IOT_Template_Report(pClient, dataReportBuffer, dataReportBufferSize, OnReportReplyCallback, NULL, QCLOUD_IOT_MQTT_COMMAND_TIMEOUT);
+		if(rc == QCLOUD_RET_SUCCESS)
+			Log_i("Data template report success");
+		else
+			Log_e("Data template report failed, err: %d", rc);
+	}else{
+		Log_e("Data template construct failed, err: %d", rc);
+	}
+}
+
+//接收串口数据
+void HandleDataFromComport(int fd)
+{
+	#define MAX_DATA_LENGTH 5
+	unsigned int cnt, i;
+	unsigned char buf[4096];
+	static unsigned char recvData[MAX_DATA_LENGTH], *pData, checkSum, recvFlag = 0, recvLength;
+
+	cnt = read(fd, buf, 4096);
+
+	if (cnt == 0)
+		return;
+
+	for (i = 0; i < cnt; i++)
+	{
+		switch(recvFlag)
+		{
+			case 0:
+				if(buf[i]=='X')
+					recvFlag = 1;
+				break;
+			case 1:
+				if(buf[i]=='Y')
+					recvFlag = 2;
+				else
+					recvFlag = 0;
+				break;
+			case 2:
+				recvLength = buf[i];
+				if((recvLength > MAX_DATA_LENGTH) || (recvLength == 0))
+					recvFlag = 0;
+				else
+				{
+					recvFlag = 3;
+					pData = recvData;
+					checkSum = recvLength;
+				}
+				break;
+			case 3:
+				*pData++ = buf[i];
+				checkSum += buf[i];
+				if(--recvLength == 0)
+					recvFlag = 4;
+				break;
+			case 4:
+				if (checkSum == buf[i]) {
+					if (recvData[0] < TOTAL_PROPERTY_COUNT) {
+						dataTemplates[recvData[0]].state = eCHANGED;
+						if (dataTemplates[recvData[0]].data_property.type == TYPE_TEMPLATE_FLOAT) {
+							// 更新温度数据
+							float temperature = *((float *)(recvData+1));
+							*((float *)(dataTemplates[recvData[0]].data_property.data)) = temperature;
+							// 判断温度是否大于 30，如果是则打开空调
+							if (temperature > 30.0f) {
+								productData.m_ac = true;
+								dataTemplates[5].state = eCHANGED;
+								printf("Turning on the AC!\n");
+							}
+							else{
+								 printf("Turning off the AC!\n");
+							}
+						}
+						else if (dataTemplates[recvData[0]].data_property.type == TYPE_TEMPLATE_BOOL) {
+							// 更新其他布尔类型数据
+							unsigned char value = (recvData[1] > 0) ? 1 : 0;
+							*((unsigned char *)(dataTemplates[recvData[0]].data_property.data)) = value;
+						}
+					}
+				}
+				recvFlag = 0;
+				break;
+			}
+		}
+}
+
+void HandleDataFromComport(int fd)
+{
+    #define MAX_DATA_LENGTH 5
+    unsigned int cnt, i;
+    unsigned char buf[4096];
+    static unsigned char recvData[MAX_DATA_LENGTH], *pData, checkSum, recvFlag = 0, recvLength;
+
+    cnt = read(fd, buf, 4096);
+
+    if (cnt == 0)
+        return;
+
+    for (i = 0; i < cnt; i++)
+    {
+        switch(recvFlag)
+        {
+            case 0:
+                if(buf[i]=='X')
+                    recvFlag = 1;
+                break;
+            case 1:
+                if(buf[i]=='Y')
+                    recvFlag = 2;
+                else
+                    recvFlag = 0;
+                break;
+            case 2:
+                recvLength = buf[i];
+                if((recvLength > MAX_DATA_LENGTH) || (recvLength == 0))
+                    recvFlag = 0;
+                else
+                {
+                    recvFlag = 3;
+                    pData = recvData;
+                    checkSum = recvLength;
+                }
+                break;
+            case 3:
+                *pData++ = buf[i];
+                checkSum += buf[i];
+                if(--recvLength == 0)
+                    recvFlag = 4;
+                break;
+            case 4:
+                if (checkSum == buf[i]) {
+                    if (recvData[0] < TOTAL_PROPERTY_COUNT) {
+                        dataTemplates[recvData[0]].state = eCHANGED;
+                        if (dataTemplates[recvData[0]].data_property.type == TYPE_TEMPLATE_FLOAT) {
+                            // 更新温度数据
+                            float temperature = *((float *)(recvData+1));
+                            *((float *)(dataTemplates[recvData[0]].data_property.data)) = temperature;
+                            // 判断温度是否大于 30，如果是则打开空调
+                            if (temperature > 30.0f) {
+                                productData.m_ac = true;
+                                dataTemplates[5].state = eCHANGED;
+                                printf("Turning on the AC!\n");
+                            }
+                            else{
+                                 productData.m_ac = false;
+                                 printf("Turning off the AC!\n");
+                            }
+                        }
+                        else if (dataTemplates[recvData[0]].data_property.type == TYPE_TEMPLATE_BOOL) {
+                            // 更新其他布尔类型数据
+                            unsigned char value = (recvData[1] > 0) ? 1 : 0;
+                            *((unsigned char *)(dataTemplates[recvData[0]].data_property.data)) = value;
+                        }
+                    }
+                }
+                recvFlag = 0;
+                break;
+            }
+        }
+}
+
+void HandleControlMsgFromCloud(int fd, void *pClient)
+{
+    int i,len, j,rc;
+    unsigned char buf[10] = {'X', 'Y'}, recvd = 0;
+    sReplyPara replyPara;
+
+    for(i = 0; i < TOTAL_PROPERTY_COUNT; i++)
+    {
+        if(dataTemplates[i].state == eCHANGED)
+        {
+            recvd = 1;
+            dataTemplates[i].state = eNOCHANGE;
+            buf[3] = i;
+            switch(i)
+            {
+                case 0:
+                case 1:
+                case 2:
+                case 6:
+                    len = 4;
+                    break;
+                case 3:
+                case 4:
+                case 5:
+                    len = 1;
+                    break;
+            }
+            memcpy(buf+4, dataTemplates[i].data_property.data, len);
+            buf[2] = len + 1;
+            buf[buf[2]+3] = 0;
+            for(j = 2; j < buf[2]+3; j++)
+                buf[buf[2]+3] += buf[j];
+            write(fd, buf, buf[2]+4);
+            printf("Done.");
+        }
+    }
+    if(recvd)
+    {
+        printf("Replying control msg.");
+        memset((char *)&replyPara, 0, sizeof(sReplyPara));
+        replyPara.code = eDEAL_SUCCESS;
+        replyPara.timeout_ms = QCLOUD_IOT_MQTT_COMMAND_TIMEOUT;
+        replyPara.status_msg[0] = '\0';
+        rc = IOT_Template_ControlReply(pClient, dataReportBuffer, dataReportBufferSize, &replyPara);
+        if(rc==QCLOUD_RET_SUCCESS)
+            Log_d("Control msg reply success.");
+        else
+            Log_e("Control msg reply failed, err: %d.", rc);
+    }
+}
+
+void ReportDataToCloud(void *pClient)
+{
+    int i, j = 0, rc;
+    DeviceProperty *pReportDataList[TOTAL_PROPERTY_COUNT];
+    //查找要上报的数据
+    for(i = 0; i < TOTAL_PROPERTY_COUNT; i++)
+    {
+        if(dataTemplates[i].state == eCHANGED)
+        {
+            pReportDataList[j++] = &(dataTemplates[i].data_property);
+            dataTemplates[i].state = eNOCHANGE;
+        }
+    }
+    //没有数据上报，返回
+    if(j == 0)
+        return;
+
+    rc = IOT_Template_JSON_ConstructReportArray(pClient, dataReportBuffer, dataReportBufferSize, j, pReportDataList);
+    if(rc == QCLOUD_RET_SUCCESS)
+    {
+        rc = IOT_Template_Report(pClient, dataReportBuffer, dataReportBufferSize, OnReportReplyCallback, NULL, QCLOUD_IOT_MQTT_COMMAND_TIMEOUT);
+        if(rc == QCLOUD_RET_SUCCESS)
+            Log_i("Data template report success");
+        else
+            Log_e("Data template report failed, err: %d", rc);
+    }else{
+        Log_e("Data template construct failed, err: %d", rc);
+    }
+}
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define TOTAL_PROPERTY_COUNT 8
+#define QCLOUD_RET_SUCCESS 0
+#define TYPE_TEMPLATE_FLOAT 0
+#define TYPE_TEMPLATE_BOOL 1
+#define QCLOUD_IOT_MQTT_COMMAND_TIMEOUT 5000
+
+typedef enum
+{
+    eNOCHANGE = 0,
+    eCHANGED,
+    cCHANGED
+} eDataState;
+
+typedef struct
+{
+    int type;
+    unsigned char data[10];
+} DeviceProperty;
+
+typedef struct
+{
+    eDataState state;
+    DeviceProperty data_property;
+} DataReport;
+
+typedef struct
+{
+    int code;
+    char status_msg[60];
+    int timeout_ms;
+} sReplyPara;
+
+DataReport dataTemplates[TOTAL_PROPERTY_COUNT];
+char dataReportBuffer[255];
+int dataReportBufferSize = 255;
+
+//对云端下发控制命令进行处理
+void HandleControlMsgFromCloud(int fd, void *pClient)
+{
+    int i, len, j, rc;
+    unsigned char buf[10] = {'X', 'Y'}, recvd = 0;
+    sReplyPara replyPara;
+
+    for (i = 0; i < TOTAL_PROPERTY_COUNT; i++)
+    {
+        if (dataTemplates[i].state == cCHANGED)
+        {
+            recvd = 1;
+            dataTemplates[i].state = eNOCHANGE;
+            buf[3] = i;
+            switch (i)
+            {
+                case 0:
+                case 1:
+                case 2:
+                case 6:
+                    len = 4;
+                    break;
+
+                case 3:
+                case 4:
+                case 5:
+                    len = 1;
+                    break;
+
+                case 7: // 处理空调开关属性
+                    len = 1;
+                    memcpy(buf+4, dataTemplates[7].data_property.data, len);
+                    if (*((unsigned char *)(dataTemplates[7].data_property.data)) == 1) { // 如果需要打开空调
+                        // 将GPIO输出设置为LOW
+                        printf("Turning ON the air conditioner.\n");
+                    } else {
+                        // 将GPIO输出设置为HIGH
+                        printf("Turning OFF the air conditioner.\n");
+                    }
+                    break;
+            }
+            memcpy(buf+4, dataTemplates[i].data_property.data, len);
+            buf[2] = len + 1;
+            buf[buf[2]+3] = 0;
+            for (j = 2; j < buf[2]+3; j++)
+                buf[buf[2]+3] += buf[j];
+            write(fd, buf, buf[2]+4);
+            printf("Done.\n");
+        }
+    }
+    if (recvd)
+    {
+        printf("Replying control msg.\n");
+        memset((char *)&replyPara, 0, sizeof(sReplyPara));
+        replyPara.code = eDEAL_SUCCESS;
+        replyPara.timeout_ms = QCLOUD_IOT_MQTT_COMMAND_TIMEOUT;
+        replyPara.status_msg[0] = '\0';
+        rc = IOT_Template_ControlReply(pClient, dataReportBuffer, dataReportBufferSize, &replyPara);
+        if (rc == QCLOUD_RET_SUCCESS)
+            printf("Control msg reply success.\n");
+        else
+            printf("Control msg reply failed, err: %d.\n", rc);
+    }
+}
+
+//向云端上报数据
+void ReportDataToCloud(void *pClient)
+{
+    int i, j = 0, rc;
+    DeviceProperty *pReportDataList[TOTAL_PROPERTY_COUNT];
+
+    //查找要上报的数据
+    for (i = 0; i < TOTAL_PROPERTY_COUNT; i++)
+    {
+        if (dataTemplates[i].state == eCHANGED)
+        {
+            pReportDataList[j++] = &(dataTemplates[i].data_property);
+            dataTemplates[i].state = eNOCHANGE;
+        }
+    }
+
+    //没有数据上报，返回
+    if (j == 0)
+        return;
+
+    rc = IOT_Template_JSON_ConstructReportArray(pClient, dataReportBuffer, dataReportBufferSize, j, pReportDataList);
+    if (rc == QCLOUD_RET_SUCCESS)
+    {
+        rc = IOT_Template_Report(pClient, dataReportBuffer, dataReportBufferSize, OnReportReplyCallback, NULL, QCLOUD_IOT_MQTT_COMMAND_TIMEOUT);
+        if (rc == QCLOUD_RET_SUCCESS)
+            printf("Data template report success.\n");
+        else
+            printf("Data template report failed, err: %d.\n", rc);
+    }
+    else
+    {
+        printf("Data template construct failed, err: %d.\n", rc);
+    }
+}
+
+void OnReportReplyCallback(void *pClient, Method method, ReplyAck replyAck, const char *pJsonDocument, void *pUserdata)
+{
+    printf("Receive report reply(ack=%d): %s\n", replyAck, pJsonDocument);
+}
+
+//接收串口数据
+void HandleDataFromComport(int fd)
+{
+    #define MAX_DATA_LENGTH 5
+    unsigned int cnt, i;
+    unsigned char buf[4096];
+    static unsigned char recvData[MAX_DATA_LENGTH], *pData, checkSum, recvFlag = 0, recvLength;
+
+    cnt = read(fd, buf, 4096);
+
+    if (cnt == 0)
+        return;
+
+    for (i = 0; i < cnt; i++)
+    {
+        switch (recvFlag)
+        {
+            case 0:
+                if (buf[i] == 'X')
+                    recvFlag = 1;
+                break;
+            case 1:
+                if (buf[i] == 'Y')
+                    recvFlag = 2;
+                else
+                    recvFlag = 0;
+                break;
+            case 2:
+                recvLength = buf[i];
+                if ((recvLength > MAX_DATA_LENGTH) || (recvLength == 0))
+                    recvFlag = 0;
+                else
+                {
+                    recvFlag = 3;
+                    pData = recvData;
+                    checkSum = recvLength;
+                }
+                break;
+            case 3:
+                *pData++ = buf[i];
+                checkSum += buf[i];
+                if (--recvLength == 0)
+                    recvFlag = 4;
+                break;
+            case 4:
+                if (checkSum == buf[i])
+                {
+                    if (recvData[0] < TOTAL_PROPERTY_COUNT)
+                    {
+                        dataTemplates[recvData[0]].state = eCHANGED;
+                        if (dataTemplates[recvData[0]].data_property.type == TYPE_TEMPLATE_FLOAT)
+                        {
+                            *((float *)(dataTemplates[recvData[0]].data_property.data)) = *((float *)(recvData+1));
+                            if (recvData[0] == 2 && *((float *)(dataTemplates[recvData[0]].data_property.data)) > 30) { // 处理空调温度
+                                dataTemplates[7].data_property.type = TYPE_TEMPLATE_BOOL;
+                                dataTemplates[7].data_property.data[0] = 1; // 打开空调开关
+                            }
+                        }
+                        else if (dataTemplates[recvData[0]].data_property.type == TYPE_TEMPLATE_BOOL)
+                        {
+                            *((unsigned char *)(dataTemplates[recvData[0]].data_property.data)) = (recvData[1] > 0) ? 1 : 0;
+                        }
+                    }
+                }
+                recvFlag = 0;
+                break;
+        }
+    }
+}
+

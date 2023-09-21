@@ -1,0 +1,6 @@
+
+config gateway 'parameter'
+        option PRODUCT_ID 'FV2AM0BG3T'
+        option DEVICE_SECRET 'YBI8B29XB07box4XbOlhnQ=='
+        option DEVICE_NAME 'router_knight'
+		option REGION 'china'
